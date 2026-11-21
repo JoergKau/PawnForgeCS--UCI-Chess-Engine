@@ -1,0 +1,34 @@
+<Project>
+
+  <!--
+    AppleDouble (`._name`) sidecars must never reach the compiler.
+
+    WHY (docs-new/new-bugs.md, Bug 119 / Bug 131 / Bug 144): `.gitignore` already
+    carries the `._*` rule, but that rule protects GIT, not the BUILD. The .NET
+    SDK's default `**/*.cs` / `**/*.resx` globs read the FILESYSTEM, so a repo
+    sync from macOS recreates `._Foo.cs` next to every source file and the build
+    dies instantly with `CSC : error CS2015: "._Foo.cs" is a binary file instead
+    of a text file` (or MSB1050 when a `._*.csproj` sidecar exists). This is not
+    hypothetical: it has broken this tree once (Bug 119), MiniChessCS relapsed on
+    2026-10-27 with 412 regenerated sidecars (its B118), and the .NET 11
+    migration tree relapsed on 2026-11-14 (Bug 144) because this file was not
+    carried over.
+
+    This is a Directory.Build.TARGETS file, not .props, on purpose: the SDK's
+    default item globs are declared in Sdk.props, which is imported BEFORE
+    Directory.Build.props. A `Remove` there would run before the items it is
+    meant to remove exist. Targets are imported after the project body, when the
+    default items are already on the lists.
+
+    The removals are scoped to this repository (`MSBuildThisFileDirectory`) and
+    only match names that begin with `._`, so they can never hide a real source
+    file.
+  -->
+  <ItemGroup>
+    <Compile Remove="$(MSBuildThisFileDirectory)**/._*" />
+    <Content Remove="$(MSBuildThisFileDirectory)**/._*" />
+    <EmbeddedResource Remove="$(MSBuildThisFileDirectory)**/._*" />
+    <None Remove="$(MSBuildThisFileDirectory)**/._*" />
+  </ItemGroup>
+
+</Project>

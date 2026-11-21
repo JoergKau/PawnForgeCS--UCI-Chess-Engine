@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Performance: Server GC + dynamic TieredPGO.
+         This is the host executable, so the GC mode is actually honored here:
+         Lazy SMP with multiple threads benefits from Server GC (a GC thread per
+         heap + per-CPU heaps) instead of the default workstation GC.
+         These properties are the source of truth for both `dotnet build` and
+         `dotnet publish`; the documented publish command repeats them
+         explicitly for clarity (specifying them again is a no-op). -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <!-- Release publish must produce ONLY the single self-contained .exe (no
+         .pdb next to it - testers on CCRL expect a clean artifact). DebugType
+         none only for Release, so Debug builds keep symbols for development. -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+    <DebugSymbols Condition="'$(Configuration)' == 'Release'">false</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../PawnForge.Core/PawnForge.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Step 1 of how-to-improve-with-dotnet11.md: remove the tiered-compilation
+         call-counting delay.
+         The runtime waits 100 ms after startup before it starts counting calls to
+         decide which methods to re-JIT at tier 1. A chess engine lives inside that
+         window at short TC, so it pays a warm-up tax on every game. Setting the
+         delay to 0 starts counting immediately and keeps dynamic PGO (verified:
+         delay0 + PGO beats both delay0 without PGO and TieredCompilation=0).
+         Measured on macOS/M4, bench 16: 1.414 M -> 1.596 M NPS, node counts
+         bit-identical (3,169,859); bench 18: +4.9 %, bench 12: +50.9 %.
+         This is emitted into PawnForge.UCI.runtimeconfig.json and is embedded in
+         the single-file publish, so it ships without a launcher script. -->
+    <RuntimeHostConfigurationOption Include="System.Runtime.TieredCompilation.CallCountingDelayMs" Value="0" />
+  </ItemGroup>
+</Project>

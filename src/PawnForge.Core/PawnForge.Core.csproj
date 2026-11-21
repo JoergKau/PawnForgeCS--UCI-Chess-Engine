@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Performance: Server GC + dynamic TieredPGO.
+         Server GC stabilizes multi-threaded (Lazy SMP) NPS by using a
+         dedicated GC thread per heap instead of pausing all workers on the
+         application thread; TieredPGO lets RyuJIT specialize the hot HCE /
+         search methods with profile data. Harmless on all platforms. -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <!-- Release publish: no .pdb for the library either (it would be copied
+         next to the single-file exe). Debug builds keep symbols. -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+    <DebugSymbols Condition="'$(Configuration)' == 'Release'">false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The MCNN v5 net (migration M7): embedded, byte-exact copy of
+         MiniChessCS's nets/V5_POOLV3-150.nnue
+         (sha256 5c604237fc882dc4a21939a54fcf73774ce5780598e700283da6cb1566a1053c).
+         "Cannot swap nets without a rebuild" is accepted (Bug 44); EvalFile is
+         deferred to M12. A corrupt or truncated net must fail the LOAD loudly
+         and trigger the announced HCE fallback, never a silent partial load. -->
+    <EmbeddedResource Include="Resources\jokausch.nnue" />
+  </ItemGroup>
+</Project>

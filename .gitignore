@@ -1,0 +1,53 @@
+# Build output
+bin/
+obj/
+dist/
+
+# IDE / editor
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+
+# OS metadata
+.DS_Store
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs and temporary files
+*.log
+*.tmp
+*.pdb
+
+# Local publish output: the release zips are committed from publish/
+# (see publish/.gitignore; build folders and engine binaries are not)
+
+# Opening books (large third-party .ctg binaries — not redistributed)
+*.ctg
+books/
+
+# Match artifacts produced by local testing
+config.json
+*.pgn
+*.jsonl
+data/
+matches/
+
+# Local tool caches
+__pycache__/
+
+# Local tuning/session files
+jupp.md
+# assistant/session transcripts are working notes, not project docs
+session-*.md
+
+# Internal migration/reference material (never published)
+PawnForgeCS-Files/
+
+# Training data tree (position pools, checkpoints, month shards, venv). The
+# exporter's Python twin is force-added individually because the parity and
+# tools-freshness gates parse it: training/mcnnue_features2.py (Bug 112).
+training/

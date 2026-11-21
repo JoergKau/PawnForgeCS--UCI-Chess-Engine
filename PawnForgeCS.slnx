@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PawnForge.Core/PawnForge.Core.csproj" />
+    <Project Path="src/PawnForge.UCI/PawnForge.UCI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PawnForge.Tests/PawnForge.Tests.csproj" />
+  </Folder>
+</Solution>

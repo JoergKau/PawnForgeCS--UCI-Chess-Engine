@@ -1,0 +1,4 @@
+# Only the release zips are published from this folder.
+*
+!*.zip
+!.gitignore
