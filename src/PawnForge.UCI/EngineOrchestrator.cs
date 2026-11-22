@@ -1272,6 +1272,9 @@ namespace PawnForge.UCI
                             searches[threadId] = search;
                             if (threadId == 0) _ponderSearch = search;
                             search.PonderMode = ponderMode;
+                            // `go infinite` must keep the search alive at the
+                            // depth cap; a depth/node/mate limit still ends.
+                            search.WaitForStopAtDepthLimit = limits.Infinite;
                             
                             // Configure Time Management (monotonic clock - see TimeManager.NowMs)
                             long currentTime = PawnForge.Core.Search.TimeManager.NowMs();
@@ -1351,7 +1354,13 @@ namespace PawnForge.UCI
                             // Ponder searches never run out of depth on their
                             // own (they terminate via stop/ponderhit), so give
                             // them a depth cap far beyond any real search.
-                            int searchDepth = ponderMode ? 256 : (limits.Depth > 0 ? limits.Depth : 64);
+                            // An unlimited search (`go infinite`) must not end on
+                            // its own: the GUI keeps the analysis running until
+                            // it sends `stop`. Use the same high cap as a ponder
+                            // search instead of the old 64, which made PawnForge
+                            // answer `go infinite` with a bestmove after a
+                            // fraction of a second.
+                            int searchDepth = ponderMode || limits.Depth == 0 ? 256 : limits.Depth;
                             return search.IterativeDeepening(threadPos, searchDepth);
                         }
                         catch (Exception innerEx)

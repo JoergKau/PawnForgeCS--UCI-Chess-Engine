@@ -4,9 +4,8 @@ PawnForgeCS is a UCI chess engine written in C# (.NET 11). It combines a modern
 alpha-beta search with a fully embedded, self-designed and self-trained neural
 network evaluation, Syzygy tablebase probing, and multi-threaded Lazy SMP search.
 
-Windows 11 x64 is the primary platform and the intended CCRL build. macOS arm64
-and Linux x64 are supported from the same source and use the same PGO release
-path.
+Windows 11 x64 is the primary platform. macOS arm64 and Linux x64 are supported
+from the same source and use the same PGO release path.
 
 A detailed capability overview is in
 [`PawnforgeCS-feature-list.md`](PawnforgeCS-feature-list.md).
@@ -62,12 +61,28 @@ cargo build --release --package bullet-utils
 cargo build --release --example mcnn_v5 --features cuda
 ```
 
-The trainer is `target\release\examples\mcnn_v5.exe`. The `mcnn_v5` example is
-PawnForgeCS's network overlay on top of the pinned checkout, so the upstream
-tree does not contain it; the overlay lives with the training workspace.
-`--features cuda` is a correctness requirement, not a speed switch: without it
-bullet builds a mock runtime that compiles and passes `--help` but fails at the
+The `mcnn_v5` example is PawnForgeCS's network overlay on top of the pinned checkout,
+so the upstream tree does not contain it; the overlay lives with the training
+workspace. `--features cuda` is a correctness requirement, not a speed switch: without
+it bullet builds a mock runtime that compiles and passes `--help` but fails at the
 first gradient step.
+
+
+## Strength
+
+- test 60 rounds against Stockfish set to **ELO 3190**:
+(option.UCI_LimitStrength=true option.UCI_Elo=3100)
+```
+Score of sf vs pf: 17 - 16 - 27  [0.508] 60
+sf playing White: 11 - 6 - 13  [0.583] 30
+sf playing Black: 6 - 10 - 14  [0.433] 30
+White vs Black: 21 - 12 - 27  [0.575] 60
+Elo difference: 5.8 +/- 65.9, LOS: 56.9 %, DrawRatio: 45.0 %
+SPRT: llr 0 (0.0%), lbound -inf, ubound inf
+```
+**PawnForgeCS: ~3100 ELO**
+
+
 
 ## Requirements
 
@@ -212,7 +227,7 @@ The engine advertises twelve user-facing options:
 | `Clear Hash` | button | — | Clears the transposition table |
 | `Own Book` | check | false | Enables the opening book |
 | `Book File` | string | — | Path to a `.ctg` book |
-| `Book Depth` | spin | 100 | Maximum book ply |
+| `Book Depth` | spin | 16 | Maximum book ply |
 | `SyzygyPath` | string | — | Tablebase directory (or `;`/`:`-separated list) |
 | `SyzygyRootProbe` | check | false | Direct DTZ-optimal root probing |
 | `Syzygy50MoveRule` | check | true | Honour the 50-move rule in tablebase scores |
@@ -285,6 +300,22 @@ The depth-16 bench node count for the shipped binary is **2,815,799**
 fixed-depth identity gate used by `scripts/pgo_verify.py` and the release
 scripts). These are the pins of the bug-fixed reference build; a search change
 that moves any of them is a different engine and must be reviewed as such.
+
+
+## Credits
+In no particular order, these engines have been notable sources of ideas or inspiration:
+
+- [Calvin 6.6.1](https://github.com/kelseyde/calvin-chess-engine)
+- [Pedantic 2.1.0](https://github.com/JoAnnP38/PedanticRF)
+
+tools used during development:
+- [Fathom ](https://github.com/jdart1/Fathom)
+- [Fastchess](https://github.com/Disservin/fastchess)
+- [Cutechess](https://github.com/cutechess/cutechess)
+
+Opening positions from:
+- [UHO_Lichess_4852_v1.epd](https://github.com/official-stockfish/books)
+
 
 ## License
 

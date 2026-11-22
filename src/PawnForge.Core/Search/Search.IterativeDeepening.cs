@@ -372,6 +372,28 @@ public partial class Search
             }
         }
 
+        // `go infinite` must not leave the search on its own (UCI): the depth
+        // cap is an implementation limit, not the end of the analysis. Wait for
+        // `stop`, repeating the last info line now and then so a GUI watchdog
+        // sees the engine is still alive at the cap. This is only set for a
+        // real `go infinite`; depth/node/mate-limited searches still return.
+        if (WaitForStopAtDepthLimit && !_signal.ShouldStop)
+        {
+            long lastBeat = TimeManager.NowMs();
+            while (!_signal.ShouldStop)
+            {
+                System.Threading.Thread.Sleep(10);
+                if (_td.ThreadId == 0 && infoEmitted
+                    && TimeManager.NowMs() - lastBeat >= 5_000)
+                {
+                    long total = _getTotalNodes != null ? _getTotalNodes() : _td.Nodes;
+                    _onInfo?.Invoke(
+                        $"info depth {maxDepth} seldepth {_qsearch.SelectiveDepth} nodes {total}");
+                    lastBeat = TimeManager.NowMs();
+                }
+            }
+        }
+
         // (2026-11-03): NEVER return a real move without a preceding info line.
         //
         // The degenerate-clock path can break out of the loop before depth 1 emits

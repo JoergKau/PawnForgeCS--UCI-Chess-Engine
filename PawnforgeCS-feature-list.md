@@ -147,7 +147,7 @@ neural evaluation, a modern alpha-beta search, and Syzygy tablebase support.
 - Deterministic fixed-depth node counts across all of the above:
   `bench 6` **15,528**, `bench 12` **456,308**, `bench 16` **2,815,799**,
   `bench 18` **6,892,874**.
-- xUnit test suite (779 tests): perft, move generation, search behaviour,
+- xUnit test suite (780 tests): perft, move generation, search behaviour,
   NNUE loader/accumulator/evaluator, vector-width parity, tablebases, UCI
   plumbing, book parsing.
 - Zero build errors and zero warnings in Release.

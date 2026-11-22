@@ -1,4 +1,4 @@
-# Only the release zips are published from this folder.
+# Nothing in this folder is committed. Release zips are built here by
+# scripts/package-release.sh and attached to the matching GitHub release.
 *
-!*.zip
 !.gitignore

@@ -193,6 +193,67 @@ public class PredecessorQuirkFixesTests : IDisposable
         }
     }
 
+    /// <summary>
+    /// The depth cap is an implementation limit, not the end of a `go infinite`
+    /// analysis: UCI says the engine must not answer `bestmove` until `stop`.
+    /// The original Q8 fix only covered the single-legal-move shortcut, so this
+    /// test pins the ACTUAL cap path. A depth-1 search reaches its cap within
+    /// milliseconds; with <see cref="Search.WaitForStopAtDepthLimit"/> set it
+    /// must then park and wait for the stop signal instead of returning.
+    /// Before the fix the search returned its move as soon as the loop ended
+    /// (`go infinite` answered after the old 64-ply cap).
+    /// </summary>
+    [Fact]
+    public async Task Q8_GoInfinite_WaitsForStopWhenTheDepthCapIsReached()
+    {
+        var pos = Position.StartingPosition();
+        var signal = new SearchSignal();
+        var info = new List<string>();
+        var search = new Search(new TTable(8), new ThreadData(0), signal,
+            TestHelper.NewEvaluator(pos), getTotalNodes: null,
+            onInfo: line => { lock (info) info.Add(line); });
+        search.TimeManager.SetInfinite();
+        // What EngineOrchestrator.RunSearch sets for `go infinite`.
+        search.WaitForStopAtDepthLimit = true;
+
+        Task<Move>? run = null;
+        try
+        {
+            // maxDepth = 1 so the cap is reached almost immediately.
+            run = Task.Run(() => search.IterativeDeepening(pos, 1));
+
+            // Wait until the depth-1 iteration has finished and reported.
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            while (sw.ElapsedMilliseconds < 10_000)
+            {
+                lock (info)
+                {
+                    if (info.Any(l => l.Contains("info depth 1 "))) break;
+                }
+                await Task.Delay(10);
+            }
+            lock (info) Assert.Contains(info, l => l.Contains("info depth 1 "));
+
+            // At the cap the search must NOT return a move on its own.
+            var early = await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(2)));
+            Assert.NotSame(run, early);
+
+            signal.Stop();
+            var finished = await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(10)));
+            Assert.Same(run, finished);
+            Assert.False((await run).IsNone); // the last completed iteration's move
+        }
+        finally
+        {
+            // Never leave a parked search behind if an assertion failed.
+            signal.Stop();
+            if (run != null)
+            {
+                await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(10)));
+            }
+        }
+    }
+
     [Fact]
     public void Q8_GoDepth_OnAForcedMove_ReportsItsIterations()
     {

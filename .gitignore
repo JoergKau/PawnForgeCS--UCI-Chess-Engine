@@ -22,8 +22,9 @@ Desktop.ini
 *.tmp
 *.pdb
 
-# Local publish output: the release zips are committed from publish/
-# (see publish/.gitignore; build folders and engine binaries are not)
+# Local publish output: release zips are built into publish/ by
+# scripts/package-release.sh and attached to GitHub releases, never committed
+# (see publish/.gitignore)
 
 # Opening books (large third-party .ctg binaries — not redistributed)
 *.ctg

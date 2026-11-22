@@ -78,6 +78,15 @@ public partial class Search
     public HashSet<long>? RootMoveRestriction { get; set; }
 
     /// <summary>
+    /// `go infinite` (UCI): an unlimited analysis must not answer `bestmove`
+    /// when the engine's depth cap is reached. The search stays alive until the
+    /// GUI sends `stop`. Unlike <see cref="TimeManager.IsInfinite"/>, this is
+    /// false for the depth/node/mate-limited searches that also run without a
+    /// clock, so those still end normally.
+    /// </summary>
+    public bool WaitForStopAtDepthLimit { get; set; } = false;
+
+    /// <summary>
     /// Minimum interval in ms between `info currmove ...` reports at the root
     /// (0 = report every root move; useful for tests).
     /// </summary>
